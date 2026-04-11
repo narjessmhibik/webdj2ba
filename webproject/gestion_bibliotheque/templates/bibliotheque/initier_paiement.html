@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block title %}Paiement - {{ film.titre }} - CinéLocation{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb bg-white p-3 rounded shadow-sm">
+        <li class="breadcrumb-item"><a href="{% url 'accueil' %}" class="text-decoration-none"><i class="fas fa-home me-1"></i>Accueil</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'catalogue_films' %}" class="text-decoration-none">Catalogue</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'detail_film' film.id %}" class="text-decoration-none">{{ film.titre }}</a></li>
+        <li class="breadcrumb-item active">Paiement</li>
+    </ol>
+</nav>
+
+<!-- Étapes de paiement -->
+<div class="mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="text-center flex-fill">
+                    <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center mb-2"
+                         style="width: 50px; height: 50px;">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="small fw-semibold">Sélection</div>
+                </div>
+                <div class="flex-fill border-top border-2 border-primary" style="height: 2px; margin: 0 -15px; transform: translateY(-25px);"></div>
+                <div class="text-center flex-fill">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-2"
+                         style="width: 50px; height: 50px;">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="small fw-semibold text-primary">Paiement</div>
+                </div>
+                <div class="flex-fill border-top border-2 border-secondary" style="height: 2px; margin: 0 -15px; transform: translateY(-25px);"></div>
+                <div class="text-center flex-fill">
+                    <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-2"
+                         style="width: 50px; height: 50px;">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <div class="small text-muted">Confirmation</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="row g-4">
+            <!-- Colonne principale - Détails du film -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h4 class="mb-0 fw-bold">
+                            <i class="fas fa-shopping-cart me-2"></i>Procéder à la location
+                        </h4>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <!-- Informations du film -->
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-5">
+                                {% if film.affiche %}
+                                    <img src="{{ film.affiche.url }}" 
+                                         class="img-fluid rounded shadow" 
+                                         alt="{{ film.titre }}" 
+                                         style="max-height: 350px; width: 100%; object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded shadow d-flex align-items-center justify-content-center text-white" 
+                                         style="height: 350px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                        <div class="text-center p-4">
+                                            <i class="fas fa-film display-3 mb-3"></i>
+                                            <h5>{{ film.titre }}</h5>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-7">
+                                <h4 class="fw-bold mb-3">{{ film.titre }}</h4>
+                                
+                                <div class="mb-3">
+                                    <p class="text-muted mb-2">
+                                        <i class="fas fa-user-tie me-2"></i>{{ film.realisateur }}
+                                    </p>
+                                    <p class="text-muted mb-2">
+                                        <i class="fas fa-calendar me-2"></i>{{ film.annee }}
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-clock me-2"></i>{{ film.duree }} min
+                                    </p>
+                                    <span class="badge bg-primary">{{ film.get_genre_display }}</span>
+                                </div>
+
+                                <!-- Avantages de la location -->
+                                <div class="border rounded p-3 bg-light mb-3">
+                                    <h6 class="fw-bold mb-3">
+                                        <i class="fas fa-gift me-2 text-success"></i>Ce que vous obtenez :
+                                    </h6>
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Accès immédiat après paiement
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Visionnage pendant 48 heures
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Compatible tous appareils
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Lecture illimitée pendant 48h
+                                        </li>
+                                        <li class="mb-0">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Qualité HD optimale
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Récapitulatif -->
+                        <div class="border-top pt-4">
+                            <h5 class="fw-bold mb-3">
+                                <i class="fas fa-receipt me-2"></i>Récapitulatif
+                            </h5>
+                            <div class="card border-0" style="background: linear-gradient(135deg, #667eea15, #764ba215);">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Location du film</span>
+                                        <span class="fw-semibold">{{ prix }}€</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Durée d'accès</span>
+                                        <span class="fw-semibold">48 heures</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Visionnages</span>
+                                        <span class="fw-semibold">Illimités</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-0 fw-bold">Total TTC</h5>
+                                            <small class="text-muted">Paiement sécurisé</small>
+                                        </div>
+                                        <h3 class="mb-0 text-success fw-bold">{{ prix }}€</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="mt-4">
+                            <a href="{% url 'simulation_paiement' film.id %}" class="btn btn-success btn-lg w-100 py-3 mb-3">
+                                <i class="fas fa-lock me-2"></i>Simuler le paiement sécurisé
+                            </a>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <a href="{% url 'detail_film' film.id %}" class="btn btn-outline-secondary w-100">
+                                        <i class="fas fa-arrow-left me-2"></i>Retour au film
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="{% url 'catalogue_films' %}" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-film me-2"></i>Catalogue
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Informations et sécurité -->
+            <div class="col-lg-5">
+                <!-- Paiement sécurisé -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-success text-white py-3">
+                        <h5 class="mb-0 fw-bold">
+                            <i class="fas fa-shield-alt me-2"></i>Paiement 100% Sécurisé
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">
+                            <i class="fas fa-info-circle text-primary me-2"></i>
+                            Ceci est une <strong>simulation de paiement</strong> à des fins académiques.
+                        </p>
+                        
+                        <div class="alert alert-warning mb-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Note :</strong> Environ 20% des simulations échouent volontairement pour démontrer la gestion d'erreurs.
+                        </div>
+
+                        <div class="mb-3">
+                            <h6 class="fw-bold mb-2">Méthodes acceptées :</h6>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+                                    <i class="fab fa-cc-visa"></i> Visa
+                                </span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+                                    <i class="fab fa-cc-mastercard"></i> Mastercard
+                                </span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+                                    <i class="fab fa-cc-paypal"></i> PayPal
+                                </span>
+                            </div>
+                        </div>
+
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2">
+                                <i class="fas fa-lock text-success me-2"></i>
+                                Connexion SSL cryptée
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-user-shield text-success me-2"></i>
+                                Données personnelles protégées
+                            </li>
+                            <li class="mb-0">
+                                <i class="fas fa-credit-card text-success me-2"></i>
+                                Transactions sécurisées
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Besoin d'aide -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-question-circle text-primary display-4 mb-3"></i>
+                        <h5 class="fw-bold mb-2">Besoin d'aide ?</h5>
+                        <p class="text-muted mb-3">
+                            Notre équipe est disponible pour vous assister
+                        </p>
+                        <button class="btn btn-outline-primary w-100" onclick="alert('Support à venir!')">
+                            <i class="fas fa-headset me-2"></i>Contacter le support
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Garantie -->
+                <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #f093fb15, #f5576c15);">
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-certificate text-warning display-4"></i>
+                        </div>
+                        <h6 class="fw-bold text-center mb-3">Notre Garantie</h6>
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Remboursement si problème technique
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Support client réactif 24/7
+                            </li>
+                            <li class="mb-0">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Qualité de streaming garantie
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section FAQ rapide -->
+<div class="row justify-content-center mt-5">
+    <div class="col-lg-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-4">
+                    <i class="fas fa-question-circle me-2 text-primary"></i>Questions Fréquentes
+                </h5>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-clock text-primary me-3 mt-1"></i>
+                            <div>
+                                <h6 class="fw-bold mb-2">Combien de temps ai-je accès ?</h6>
+                                <p class="text-muted small mb-0">
+                                    Vous avez 48 heures d'accès à partir du moment du paiement, avec un nombre illimité de visionnages.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-mobile-alt text-primary me-3 mt-1"></i>
+                            <div>
+                                <h6 class="fw-bold mb-2">Sur quels appareils ?</h6>
+                                <p class="text-muted small mb-0">
+                                    Compatible avec ordinateurs, smartphones, tablettes et smart TV connectées.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-hd-video text-primary me-3 mt-1"></i>
+                            <div>
+                                <h6 class="fw-bold mb-2">Quelle est la qualité ?</h6>
+                                <p class="text-muted small mb-0">
+                                    Streaming en haute définition (HD) et 4K selon votre connexion internet.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-undo text-primary me-3 mt-1"></i>
+                            <div>
+                                <h6 class="fw-bold mb-2">Puis-je annuler ?</h6>
+                                <p class="text-muted small mb-0">
+                                    Le film est automatiquement retourné après 48h, aucune action requise de votre part.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

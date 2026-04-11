@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ film.titre }} - CinéLocation{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb moderne -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb bg-white p-3 rounded shadow-sm">
+        <li class="breadcrumb-item"><a href="{% url 'accueil' %}" class="text-decoration-none"><i class="fas fa-home me-1"></i>Accueil</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'catalogue_films' %}" class="text-decoration-none">Catalogue</a></li>
+        <li class="breadcrumb-item active">{{ film.titre }}</li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+    <!-- Colonne principale -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <!-- En-tête du film -->
+            <div class="card-header text-white py-4" 
+                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h2 class="mb-1 fw-bold">{{ film.titre }}</h2>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="badge bg-white bg-opacity-25">{{ film.annee }}</span>
+                            <span class="badge bg-white bg-opacity-25">
+                                <i class="fas fa-clock me-1"></i>{{ film.duree }} min
+                            </span>
+                            <span class="badge bg-white bg-opacity-25">{{ film.get_genre_display }}</span>
+                        </div>
+                    </div>
+                    {% if film.est_disponible %}
+                    <span class="badge bg-success fs-6 px-3 py-2">
+                        <i class="fas fa-check-circle me-1"></i>Disponible
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary fs-6 px-3 py-2">Indisponible</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <!-- Affiche du film -->
+                    <div class="col-md-5">
+                        <div class="position-relative">
+                            {% if film.affiche %}
+                                <img src="{{ film.affiche.url }}" 
+                                     class="img-fluid rounded shadow-lg w-100" 
+                                     alt="{{ film.titre }}" 
+                                     style="max-height: 500px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded shadow-lg d-flex align-items-center justify-content-center text-white" 
+                                     style="height: 500px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                    <div class="text-center p-4">
+                                        <i class="fas fa-film display-1 mb-3"></i>
+                                        <h4>{{ film.titre }}</h4>
+                                        <small>Aucune affiche disponible</small>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <!-- Badge prix sur l'affiche -->
+                            <div class="position-absolute bottom-0 start-0 w-100 p-3" 
+                                 style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
+                                <div class="d-flex justify-content-between align-items-center text-white">
+                                    <div>
+                                        <small class="d-block mb-1">Prix de location</small>
+                                        <span class="h3 mb-0 fw-bold">{{ film.prix_location }}€</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bande-annonce -->
+                        {% if film.bande_annonce %}
+                        <div class="mt-3 d-grid">
+                            <a href="{{ film.bande_annonce }}" target="_blank" class="btn btn-danger">
+                                <i class="fab fa-youtube me-2"></i>Voir la bande-annonce
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Informations du film -->
+                    <div class="col-md-7">
+                        <!-- Note moyenne -->
+                        {% if note_moyenne %}
+                        <div class="mb-4 p-3 rounded" style="background: linear-gradient(135deg, #ffc10715, #ffc10710);">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-warning mb-2" style="font-size: 1.5rem;">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= note_moyenne %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ note_moyenne|floatformat:1 }}/5 sur {{ total_avis }} avis
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Détails -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <div class="p-3 rounded bg-light">
+                                    <small class="text-muted d-block mb-1">
+                                        <i class="fas fa-user-tie me-1"></i>Réalisateur
+                                    </small>
+                                    <div class="fw-semibold">{{ film.realisateur }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded bg-light">
+                                    <small class="text-muted d-block mb-1">
+                                        <i class="fas fa-clock me-1"></i>Durée
+                                    </small>
+                                    <div class="fw-semibold">{{ film.duree }} minutes</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded bg-light">
+                                    <small class="text-muted d-block mb-1">
+                                        <i class="fas fa-calendar me-1"></i>Année
+                                    </small>
+                                    <div class="fw-semibold">{{ film.annee }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded bg-light">
+                                    <small class="text-muted d-block mb-1">
+                                        <i class="fas fa-tags me-1"></i>Genre
+                                    </small>
+                                    <div class="fw-semibold">{{ film.get_genre_display }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Synopsis -->
+                        <div class="mb-4">
+                            <h5 class="fw-bold mb-3">
+                                <i class="fas fa-book-open me-2 text-primary"></i>Synopsis
+                            </h5>
+                            <p class="lead text-muted">{{ film.description }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions principales -->
+                <div class="border-top pt-4 mt-4">
+                    <div class="row g-3">
+                        {% if user.is_authenticated %}
+                            {% if user_has_active_rental %}
+                                <!-- L'utilisateur a déjà loué ce film -->
+                                <div class="col-md-6">
+                                    <a href="{% url 'regarder_film' film.id %}" class="btn btn-success btn-lg w-100 py-3">
+                                        <i class="fas fa-play-circle me-2"></i>Regarder maintenant
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <a href="{% url 'mes_locations' %}" class="btn btn-info btn-lg w-100 py-3">
+                                        <i class="fas fa-list me-2"></i>Voir mes locations
+                                    </a>
+                                </div>
+                            {% else %}
+                                <!-- Bouton de location -->
+                                <div class="col-md-8">
+                                    <a href="{% url 'initier_paiement' film.id %}" class="btn btn-primary btn-lg w-100 py-3">
+                                        <i class="fas fa-shopping-cart me-2"></i>Louer ce film - {{ film.prix_location }}€
+                                    </a>
+                                </div>
+                                <!-- Bouton liste de souhaits -->
+                                <div class="col-md-4">
+                                    {% if dans_liste_souhaits %}
+                                        <a href="{% url 'supprimer_liste_souhaits' film.id %}" class="btn btn-danger btn-lg w-100 py-3">
+                                            <i class="fas fa-heart-broken me-2"></i>Retirer
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'ajouter_liste_souhaits' film.id %}" class="btn btn-outline-danger btn-lg w-100 py-3">
+                                            <i class="fas fa-heart me-2"></i>Favoris
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="col-12">
+                                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary btn-lg w-100 py-3">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Se connecter pour louer
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Avis -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header text-white py-3" 
+                 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <h4 class="mb-0 fw-bold">
+                    <i class="fas fa-comments me-2"></i>Avis des spectateurs
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                {% if user.is_authenticated %}
+                <!-- Formulaire d'avis -->
+                <div class="mb-4 p-4 rounded" style="background: linear-gradient(135deg, #667eea10, #764ba210);">
+                    <h5 class="fw-bold mb-3">
+                        {% if user_avis %}
+                            <i class="fas fa-edit me-2"></i>Modifier votre avis
+                        {% else %}
+                            <i class="fas fa-pen me-2"></i>Donner votre avis
+                        {% endif %}
+                    </h5>
+                    <form method="post" action="{% url 'detail_film' film.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Votre note</label>
+                            {{ form.note }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Votre commentaire (optionnel)</label>
+                            {{ form.commentaire }}
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            {% if user_avis %}Mettre à jour{% else %}Publier{% endif %}
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="alert alert-info mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-info-circle fs-4 me-3"></i>
+                        <div>
+                            <strong>Connectez-vous pour laisser un avis</strong>
+                            <p class="mb-0 small">Partagez votre expérience avec la communauté</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-sign-in-alt me-2"></i>Se connecter
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Liste des avis -->
+                <div class="border-top pt-4">
+                    <h6 class="fw-bold mb-4">
+                        {{ total_avis }} avis{{ total_avis|pluralize }}
+                    </h6>
+                    
+                    {% if avis_list %}
+                        {% for avis in avis_list %}
+                        <div class="mb-4 pb-4 {% if not forloop.last %}border-bottom{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">{{ avis.utilisateur.username }}</h6>
+                                        <small class="text-muted">{{ avis.date_avis|date:"d/m/Y à H:i" }}</small>
+                                    </div>
+                                </div>
+                                <div class="text-warning">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= avis.note %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% if avis.commentaire %}
+                            <p class="mb-0 ms-5 ps-3">{{ avis.commentaire }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-comment-slash display-4 mb-3 opacity-25"></i>
+                            <p class="mb-0">Aucun avis pour le moment. Soyez le premier !</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Informations de location -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-success text-white py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-info-circle me-2"></i>Informations de location
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="fas fa-check text-success me-3 mt-1"></i>
+                        <span>Accès immédiat après paiement</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="fas fa-clock text-success me-3 mt-1"></i>
+                        <span>Durée de location : 48 heures</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="fas fa-devices text-success me-3 mt-1"></i>
+                        <span>Compatible tous appareils</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-start">
+                        <i class="fas fa-infinity text-success me-3 mt-1"></i>
+                        <span>Visionnage illimité pendant 48h</span>
+                    </li>
+                    <li class="d-flex align-items-start">
+                        <i class="fas fa-undo text-success me-3 mt-1"></i>
+                        <span>Retour automatique après expiration</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Films similaires -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-warning text-dark py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-lightbulb me-2"></i>Films similaires
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    D'autres films du genre <strong>{{ film.get_genre_display }}</strong> pourraient vous plaire.
+                </p>
+                <a href="{% url 'catalogue_films' %}?genre={{ film.genre }}" class="btn btn-outline-warning w-100">
+                    <i class="fas fa-search me-2"></i>Explorer {{ film.get_genre_display }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

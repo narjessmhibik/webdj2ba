@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block title %}Catalogue des Films - CinéLocation{% endblock %}
+
+{% block content %}
+<!-- En-tête du catalogue -->
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+            <h1 class="fw-bold mb-2">
+                <i class="fas fa-film me-2"></i>Catalogue des Films
+            </h1>
+            <p class="text-muted mb-0">Découvrez notre sélection de films en streaming</p>
+        </div>
+        <div>
+            <span class="badge bg-primary fs-5 px-4 py-3">
+                <i class="fas fa-layer-group me-2"></i>{{ films.count }} film{{ films.count|pluralize }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres modernisés -->
+<div class="card border-0 shadow-sm mb-5">
+    <div class="card-body p-4">
+        <form method="get" id="filterForm">
+            <div class="row g-3 align-items-end">
+                <!-- Recherche -->
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-search me-1 text-primary"></i>Rechercher un film
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" 
+                               name="q" 
+                               class="form-control border-start-0 ps-0" 
+                               placeholder="Titre, réalisateur, acteur..."
+                               value="{{ request.GET.q }}">
+                        {% if request.GET.q %}
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearSearch()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Genre -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-tags me-1 text-success"></i>Genre
+                    </label>
+                    <select name="genre" class="form-select">
+                        <option value="">Tous les genres</option>
+                        {% for value, label in genres %}
+                            <option value="{{ value }}" {% if request.GET.genre == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Boutons d'action -->
+                <div class="col-md-3">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Filtrer
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtres actifs -->
+            {% if request.GET.q or request.GET.genre %}
+            <div class="mt-3 pt-3 border-top">
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    <small class="text-muted me-2">Filtres actifs :</small>
+                    {% if request.GET.q %}
+                    <span class="badge bg-primary bg-opacity-10 text-primary">
+                        Recherche : "{{ request.GET.q }}"
+                        <a href="?genre={{ request.GET.genre }}" class="text-primary ms-1">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                    {% endif %}
+                    {% if request.GET.genre %}
+                    <span class="badge bg-success bg-opacity-10 text-success">
+                        Genre : {{ request.GET.genre }}
+                        <a href="?q={{ request.GET.q }}" class="text-success ms-1">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </span>
+                    {% endif %}
+                    <a href="{% url 'catalogue_films' %}" class="btn btn-sm btn-outline-secondary ms-auto">
+                        <i class="fas fa-redo me-1"></i>Réinitialiser
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Tri rapide -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-outline-secondary btn-sm active" data-sort="recent">
+            <i class="fas fa-clock me-1"></i>Plus récents
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-sort="alphabetical">
+            <i class="fas fa-sort-alpha-down me-1"></i>A-Z
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-sort="price-low">
+            <i class="fas fa-arrow-up me-1"></i>Prix croissant
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-sort="price-high">
+            <i class="fas fa-arrow-down me-1"></i>Prix décroissant
+        </button>
+    </div>
+    
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-outline-secondary btn-sm active" data-view="grid">
+            <i class="fas fa-th"></i>
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-view="list">
+            <i class="fas fa-list"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Grille des films -->
+<div class="row g-4" id="filmsGrid">
+    {% for film in films %}
+    <div class="col-sm-6 col-md-4 col-lg-3 film-item" 
+         data-title="{{ film.titre|lower }}" 
+         data-price="{{ film.prix_location }}"
+         data-year="{{ film.annee }}">
+        <div class="card film-card h-100 border-0 shadow-sm">
+            <!-- Affiche -->
+            <div class="position-relative" style="overflow: hidden;">
+                {% if film.affiche %}
+                <div style="height: 350px; overflow: hidden;">
+                    <img src="{{ film.affiche.url }}" 
+                         class="card-img-top w-100 h-100" 
+                         alt="{{ film.titre }}" 
+                         style="object-fit: cover;">
+                </div>
+                {% else %}
+                <div class="card-img-top d-flex align-items-center justify-content-center text-white" 
+                     style="height: 350px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                    <div class="text-center p-3">
+                        <i class="fas fa-film display-3 mb-2"></i>
+                        <h6>{{ film.titre }}</h6>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Badge prix -->
+                <div class="position-absolute top-0 end-0 m-3">
+                    <span class="badge bg-dark bg-opacity-75 fs-6 px-3 py-2">
+                        {{ film.prix_location }}€
+                    </span>
+                </div>
+
+                <!-- Overlay au survol -->
+                <div class="position-absolute bottom-0 start-0 end-0 p-3 text-white" 
+                     style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
+                    <div class="d-flex align-items-center gap-2">
+                        {% if film.est_disponible %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check me-1"></i>Disponible
+                        </span>
+                        {% else %}
+                        <span class="badge bg-secondary">Indisponible</span>
+                        {% endif %}
+                        <span class="badge bg-primary">{{ film.get_genre_display }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Corps de la carte -->
+            <div class="card-body d-flex flex-column p-3">
+                <h5 class="card-title fw-bold mb-2">{{ film.titre }}</h5>
+                <p class="text-muted small mb-2">
+                    <i class="fas fa-user-tie me-1"></i>{{ film.realisateur }}<br>
+                    <i class="fas fa-calendar me-1"></i>{{ film.annee }}
+                    <span class="mx-1">•</span>
+                    <i class="fas fa-clock me-1"></i>{{ film.duree }}min
+                </p>
+                
+                <p class="card-text small text-muted flex-grow-1 mb-3">
+                    {{ film.description|truncatewords:12 }}
+                </p>
+                
+                <div class="mt-auto">
+                    {% if film.est_disponible %}
+                    <a href="{% url 'detail_film' film.id %}" class="btn btn-primary w-100">
+                        <i class="fas fa-play-circle me-2"></i>Voir détails
+                    </a>
+                    {% else %}
+                    <button class="btn btn-outline-secondary w-100" disabled>
+                        <i class="fas fa-ban me-2"></i>Indisponible
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-search text-muted mb-4" style="font-size: 4rem; opacity: 0.3;"></i>
+                <h4 class="fw-bold mb-3">Aucun film trouvé</h4>
+                <p class="text-muted mb-4">
+                    Aucun film ne correspond à vos critères de recherche.<br>
+                    Essayez avec d'autres mots-clés ou réinitialisez les filtres.
+                </p>
+                <a href="{% url 'catalogue_films' %}" class="btn btn-primary">
+                    <i class="fas fa-redo me-2"></i>Réinitialiser les filtres
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination si nécessaire -->
+{% if films.count > 12 %}
+<div class="d-flex justify-content-center mt-5">
+    <nav>
+        <ul class="pagination">
+            <li class="page-item disabled">
+                <span class="page-link">Précédent</span>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#">Suivant</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+<script>
+// Fonction pour effacer la recherche
+function clearSearch() {
+    const form = document.getElementById('filterForm');
+    const searchInput = form.querySelector('input[name="q"]');
+    searchInput.value = '';
+    form.submit();
+}
+
+// Gestion du tri
+document.querySelectorAll('[data-sort]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // Mettre à jour le bouton actif
+        document.querySelectorAll('[data-sort]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const sortType = this.getAttribute('data-sort');
+        const grid = document.getElementById('filmsGrid');
+        const items = Array.from(document.querySelectorAll('.film-item'));
+        
+        items.sort((a, b) => {
+            switch(sortType) {
+                case 'alphabetical':
+                    return a.getAttribute('data-title').localeCompare(b.getAttribute('data-title'));
+                case 'price-low':
+                    return parseFloat(a.getAttribute('data-price')) - parseFloat(b.getAttribute('data-price'));
+                case 'price-high':
+                    return parseFloat(b.getAttribute('data-price')) - parseFloat(a.getAttribute('data-price'));
+                case 'recent':
+                    return parseInt(b.getAttribute('data-year')) - parseInt(a.getAttribute('data-year'));
+                default:
+                    return 0;
+            }
+        });
+        
+        items.forEach(item => grid.appendChild(item));
+    });
+});
+
+// Gestion de l'affichage grille/liste
+document.querySelectorAll('[data-view]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('[data-view]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const view = this.getAttribute('data-view');
+        const grid = document.getElementById('filmsGrid');
+        
+        if (view === 'list') {
+            grid.classList.remove('row-cols-md-4', 'row-cols-lg-3');
+            grid.classList.add('row-cols-1');
+            document.querySelectorAll('.film-item').forEach(item => {
+                item.classList.remove('col-sm-6', 'col-md-4', 'col-lg-3');
+                item.classList.add('col-12');
+            });
+        } else {
+            grid.classList.remove('row-cols-1');
+            grid.classList.add('row-cols-md-4', 'row-cols-lg-3');
+            document.querySelectorAll('.film-item').forEach(item => {
+                item.classList.remove('col-12');
+                item.classList.add('col-sm-6', 'col-md-4', 'col-lg-3');
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

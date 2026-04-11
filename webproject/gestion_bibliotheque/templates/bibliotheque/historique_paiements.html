@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Paiements - CinéLocation{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb bg-white p-3 rounded shadow-sm">
+        <li class="breadcrumb-item"><a href="{% url 'accueil' %}" class="text-decoration-none"><i class="fas fa-home me-1"></i>Accueil</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'mes_locations' %}" class="text-decoration-none">Mes locations</a></li>
+        <li class="breadcrumb-item active">Mes paiements</li>
+    </ol>
+</nav>
+
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1 class="fw-bold mb-2">
+                <i class="fas fa-credit-card me-2"></i>Historique des paiements
+            </h1>
+            <p class="text-muted mb-0">Consultez toutes vos transactions</p>
+        </div>
+        {% if paiements %}
+        <div>
+            <span class="badge bg-info fs-5 px-4 py-3">
+                <i class="fas fa-receipt me-2"></i>{{ paiements.count }} transaction{{ paiements.count|pluralize }}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if paiements %}
+    <!-- Statistiques globales -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 text-center p-4" 
+                 style="background: linear-gradient(135deg, #43e97b15, #38f9d715);">
+                <i class="fas fa-check-circle text-success display-4 mb-3"></i>
+                <h3 class="fw-bold text-success">{{ paiements_reussis.count }}</h3>
+                <p class="text-muted mb-0">Paiements réussis</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 text-center p-4" 
+                 style="background: linear-gradient(135deg, #fa709a15, #fee14015);">
+                <i class="fas fa-times-circle text-danger display-4 mb-3"></i>
+                <h3 class="fw-bold text-danger">{{ paiements_echoues.count }}</h3>
+                <p class="text-muted mb-0">Paiements échoués</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 text-center p-4" 
+                 style="background: linear-gradient(135deg, #667eea15, #764ba215);">
+                <i class="fas fa-euro-sign text-primary display-4 mb-3"></i>
+                <h3 class="fw-bold text-primary">{{ total_montant|default:0 }}€</h3>
+                <p class="text-muted mb-0">Total simulé</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100 text-center p-4" 
+                 style="background: linear-gradient(135deg, #ffeaa715, #ffd70015);">
+                <i class="fas fa-film text-warning display-4 mb-3"></i>
+                <h3 class="fw-bold text-warning">{{ paiements_reussis.count }}</h3>
+                <p class="text-muted mb-0">Films loués</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="text-muted me-2">Filtrer :</span>
+                <button class="btn btn-sm btn-outline-primary active" data-filter="all">
+                    Tous ({{ paiements.count }})
+                </button>
+                <button class="btn btn-sm btn-outline-success" data-filter="reussi">
+                    Réussis ({{ paiements_reussis.count }})
+                </button>
+                <button class="btn btn-sm btn-outline-danger" data-filter="echoue">
+                    Échoués ({{ paiements_echoues.count }})
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des paiements -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0 py-3">
+                                <i class="fas fa-calendar me-1"></i>Date
+                            </th>
+                            <th class="border-0 py-3">
+                                <i class="fas fa-film me-1"></i>Film
+                            </th>
+                            <th class="border-0 py-3">
+                                <i class="fas fa-euro-sign me-1"></i>Montant
+                            </th>
+                            <th class="border-0 py-3">
+                                <i class="fas fa-credit-card me-1"></i>Méthode
+                            </th>
+                            <th class="border-0 py-3">
+                                <i class="fas fa-info-circle me-1"></i>Statut
+                            </th>
+                            <th class="border-0 py-3">
+                                <i class="fas fa-hashtag me-1"></i>Référence
+                            </th>
+                            <th class="border-0 py-3 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for paiement in paiements %}
+                        <tr class="payment-row" data-status="{{ paiement.statut }}">
+                            <!-- Date -->
+                            <td class="align-middle">
+                                <div>
+                                    <strong class="d-block">{{ paiement.date_paiement|date:"d/m/Y" }}</strong>
+                                    <small class="text-muted">{{ paiement.date_paiement|date:"H:i" }}</small>
+                                </div>
+                            </td>
+                            
+                            <!-- Film -->
+                            <td class="align-middle">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        {% if paiement.location.film.affiche %}
+                                            <img src="{{ paiement.location.film.affiche.url }}" 
+                                                 class="rounded" 
+                                                 alt="{{ paiement.location.film.titre }}"
+                                                 style="width: 50px; height: 50px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="rounded bg-primary bg-opacity-10 d-flex align-items-center justify-content-center"
+                                                 style="width: 50px; height: 50px;">
+                                                <i class="fas fa-film text-primary"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <strong class="d-block">{{ paiement.location.film.titre }}</strong>
+                                        <small class="text-muted">{{ paiement.location.film.realisateur }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Montant -->
+                            <td class="align-middle">
+                                <span class="fw-bold fs-5 {% if paiement.statut == 'reussi' %}text-success{% else %}text-danger{% endif %}">
+                                    {{ paiement.montant }}€
+                                </span>
+                            </td>
+                            
+                            <!-- Méthode -->
+                            <td class="align-middle">
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                    {% if paiement.methode == 'carte' %}
+                                        <i class="fas fa-credit-card me-1"></i>
+                                    {% elif paiement.methode == 'paypal' %}
+                                        <i class="fab fa-paypal me-1"></i>
+                                    {% endif %}
+                                    {{ paiement.get_methode_display }}
+                                </span>
+                            </td>
+                            
+                            <!-- Statut -->
+                            <td class="align-middle">
+                                {% if paiement.statut == 'reussi' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Réussi
+                                    </span>
+                                {% elif paiement.statut == 'echoue' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-times-circle me-1"></i>Échoué
+                                    </span>
+                                {% elif paiement.statut == 'annule' %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-ban me-1"></i>Annulé
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-clock me-1"></i>En attente
+                                    </span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Référence -->
+                            <td class="align-middle">
+                                <code class="small">{{ paiement.reference|truncatechars:12 }}</code>
+                            </td>
+                            
+                            <!-- Actions -->
+                            <td class="align-middle text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'detail_film' paiement.location.film.id %}" 
+                                       class="btn btn-outline-primary" 
+                                       title="Voir le film"
+                                       data-bs-toggle="tooltip">
+                                        <i class="fas fa-info-circle"></i>
+                                    </a>
+                                    {% if paiement.statut == 'reussi' %}
+                                        <a href="{% url 'regarder_film' paiement.location.film.id %}" 
+                                           class="btn btn-outline-success" 
+                                           title="Regarder"
+                                           data-bs-toggle="tooltip">
+                                            <i class="fas fa-play"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body text-center p-4">
+            <h5 class="fw-bold mb-3">Actions rapides</h5>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a href="{% url 'mes_locations' %}" class="btn btn-primary">
+                    <i class="fas fa-video me-2"></i>Mes locations
+                </a>
+                <a href="{% url 'catalogue_films' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-film me-2"></i>Catalogue
+                </a>
+                <button class="btn btn-outline-secondary" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>Imprimer l'historique
+                </button>
+            </div>
+        </div>
+    </div>
+
+{% else %}
+    <!-- État vide -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-receipt text-muted mb-4" style="font-size: 6rem; opacity: 0.2;"></i>
+            <h3 class="fw-bold mb-3">Aucun paiement enregistré</h3>
+            <p class="text-muted lead mb-4">
+                Vous n'avez pas encore effectué de paiement.<br>
+                Commencez par louer un film !
+            </p>
+            <a href="{% url 'catalogue_films' %}" class="btn btn-primary btn-lg px-5">
+                <i class="fas fa-search me-2"></i>Découvrir des films à louer
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<script>
+// Filtrage des paiements
+document.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // Mettre à jour le bouton actif
+        document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const filter = this.getAttribute('data-filter');
+        const rows = document.querySelectorAll('.payment-row');
+        
+        rows.forEach(row => {
+            const status = row.getAttribute('data-status');
+            if (filter === 'all') {
+                row.style.display = '';
+            } else if (status === filter) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Activer les tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => {
+        new bootstrap.Tooltip(tooltip);
+    });
+});
+</script>
+{% endblock %}

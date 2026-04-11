@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Notifications - CinéLocation{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>🔔 Mes Notifications</h1>
+    <span class="badge bg-primary fs-6">{{ notifications.count }} notification(s)</span>
+</div>
+
+{% if notifications %}
+<div class="list-group">
+    {% for notification in notifications %}
+    <div class="list-group-item {% if not notification.est_lue %}list-group-item-warning{% endif %}">
+        <div class="d-flex w-100 justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center mb-2">
+                    <!-- ✅ NOUVEAUX TYPES DE NOTIFICATIONS SANS RETARD/RAPPEL -->
+                    {% if notification.type_notification == 'location' %}
+                    <span class="badge bg-success me-2">🎬 Location</span>
+                    {% elif notification.type_notification == 'nouveau_film' %}
+                    <span class="badge bg-info me-2">🆕 Nouveau</span>
+                    {% elif notification.type_notification == 'promotion' %}
+                    <span class="badge bg-warning me-2">💰 Promotion</span>
+                    {% elif notification.type_notification == 'recommandation' %}
+                    <span class="badge bg-primary me-2">⭐ Recommandation</span>
+                    {% else %}
+                    <span class="badge bg-secondary me-2">📢 Information</span>
+                    {% endif %}
+                    
+                    <h6 class="mb-0">{{ notification.get_type_notification_display }}</h6>
+                </div>
+                <p class="mb-1">{{ notification.message }}</p>
+                {% if notification.film %}
+                <small class="text-muted">
+                    Film concerné: 
+                    <a href="{% url 'detail_film' notification.film.id %}" class="text-decoration-none">
+                        {{ notification.film.titre }}
+                    </a>
+                </small>
+                {% endif %}
+            </div>
+            <div class="text-end ms-3">
+                <small class="text-muted">{{ notification.date_creation|date:"d/m/Y H:i" }}</small>
+                {% if not notification.est_lue %}
+                <br>
+                <a href="{% url 'marquer_comme_lue' notification.id %}" class="btn btn-sm btn-outline-success mt-1">
+                    ✓ Marquer comme lue
+                </a>
+                {% else %}
+                <br>
+                <span class="badge bg-success mt-1">✓ Lu</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Actions groupées -->
+<div class="card mt-4">
+    <div class="card-body text-center">
+        <p class="mb-3">
+            {% with notifications_non_lues=notifications|dictsort:"est_lue"|length %}
+            Vous avez {{ notifications_non_lues }} notification(s) non lue(s)
+            {% endwith %}
+        </p>
+        <div class="btn-group" role="group">
+            <a href="{% url 'accueil' %}" class="btn btn-primary">
+                 Retour à l'accueil
+            </a>
+            <a href="{% url 'catalogue_films' %}" class="btn btn-outline-primary">
+                 Voir le catalogue
+            </a>
+            {% if notifications %}
+            <a href="{% url 'marquer_toutes_lues' %}" class="btn btn-outline-success">
+                ✓ Tout marquer comme lu
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="text-center py-5">
+    <div class="display-1 text-muted mb-3">🔔</div>
+    <h3 class="text-muted">Aucune notification</h3>
+    <p class="text-muted mb-4">
+        Vous n'avez aucune notification pour le moment.<br>
+        Revenez après avoir loué un film ou consultez nos nouveautés !
+    </p>
+    <div class="btn-group" role="group">
+        <a href="{% url 'accueil' %}" class="btn btn-primary btn-lg">
+            🎬 Retour à l'accueil
+        </a>
+        <a href="{% url 'catalogue_films' %}" class="btn btn-outline-primary btn-lg">
+            📚 Explorer le catalogue
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

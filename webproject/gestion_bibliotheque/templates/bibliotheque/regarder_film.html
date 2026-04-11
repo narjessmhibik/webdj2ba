@@ -1,0 +1,557 @@
+<!-- templates/bibliotheque/regarder_film.html -->
+{% extends 'base.html' %}
+{% load embed_video_tags %}
+
+{% block title %}Regarder {{ film.titre }} - CinéLocation{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'accueil' %}">Accueil</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'catalogue_films' %}">Catalogue</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'detail_film' film.id %}">{{ film.titre }}</a></li>
+        <li class="breadcrumb-item active">Lecture</li>
+    </ol>
+</nav>
+
+<div class="container">
+    <!-- Informations de location -->
+    <div class="alert alert-info mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-1"><i class="fas fa-play-circle me-2"></i>Lecture en cours : {{ film.titre }}</h5>
+                <p class="mb-0">
+                    <i class="fas fa-clock me-1"></i>Accès valable jusqu'au : 
+                    <strong>{{ location.date_expiration|date:"d/m/Y à H:i" }}</strong>
+                </p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-warning fs-6">
+                    <i class="fas fa-hourglass-half me-1"></i>{{ location.temps_restant }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Lecteur vidéo principal -->
+        <div class="col-lg-8">
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="fas fa-film me-2"></i>Lecteur vidéo</h4>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Zone de lecture AVEC django-embed-video -->
+                    <div class="video-container" style="background: #000; position: relative; min-height: 450px;">
+                        {% if film.url_video %}
+                            <!-- Vidéo réelle depuis YouTube/Vimeo -->
+                            {% video film.url_video as my_video %}
+                                <div class="ratio ratio-16x9">
+                                    {% video my_video "100%x100%" %}
+                                </div>
+                                
+                                <!-- Informations sur la vidéo -->
+                                <div class="video-info bg-dark text-white p-3">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <small>
+                                                <i class="fas fa-play-circle me-1"></i>
+                                                Source: {{ my_video.backend|title }}
+                                            </small>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            <small>
+                                                <i class="fas fa-expand me-1"></i>
+                                                Double-cliquez pour le plein écran
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endvideo %}
+                        {% else %}
+                            <!-- Fallback: simulation si pas de vidéo -->
+                            <div id="start-screen" class="text-center text-white p-5" style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                <div class="mb-4">
+                                    <i class="fas fa-play-circle" style="font-size: 5rem; color: #fff;"></i>
+                                </div>
+                                <h3>{{ film.titre }}</h3>
+                                <p class="lead">Prêt à regarder ?</p>
+                                <p class="text-muted">Durée : {{ film.duree }} minutes</p>
+                                
+                                <!-- Simulation de lecture -->
+                                <button id="start-video" class="btn btn-success btn-lg mt-3">
+                                    <i class="fas fa-play me-2"></i>Commencer la lecture
+                                </button>
+                            </div>
+                            
+                            <!-- Lecteur simulé (caché au début) -->
+                            <div id="video-player" style="display: none; height: 100%;">
+                                <!-- Barre de contrôle supérieure -->
+                                <div class="video-controls-top bg-dark p-3 d-flex justify-content-between align-items-center">
+                                    <h5 class="text-white mb-0">{{ film.titre }}</h5>
+                                    <div>
+                                        <span class="badge bg-info me-2">HD</span>
+                                        <span class="badge bg-success">1080p</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Écran vidéo simulé -->
+                                <div class="video-screen" style="height: 400px; display: flex; justify-content: center; align-items: center; background: linear-gradient(45deg, #1a1a2e, #16213e);">
+                                    <div class="text-center text-white">
+                                        <div style="font-size: 3rem; margin-bottom: 1rem;">
+                                            <i class="fas fa-play-circle"></i>
+                                        </div>
+                                        <h4>Lecture en cours...</h4>
+                                        <p class="text-muted">Interface de streaming simulée</p>
+                                        
+                                        <!-- Barre de progression -->
+                                        <div class="progress mt-4" style="width: 80%; margin: 0 auto;">
+                                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                                 role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                        
+                                        <!-- Temps -->
+                                        <div class="mt-3">
+                                            <span id="current-time">0:00</span> / 
+                                            <span id="total-time">{{ film.duree }}:00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Barre de contrôle inférieure -->
+                                <div class="video-controls-bottom bg-dark p-3">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-3">
+                                            <button id="play-pause" class="btn btn-outline-light btn-sm">
+                                                <i class="fas fa-pause"></i> Pause
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center">
+                                                <span class="text-white me-2">Volume:</span>
+                                                <input type="range" class="form-range" id="volume-slider" min="0" max="100" value="80">
+                                                <span class="text-white ms-2"><i class="fas fa-volume-up"></i></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 text-end">
+                                            <button id="fullscreen" class="btn btn-outline-light btn-sm">
+                                                <i class="fas fa-expand"></i> Plein écran
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Informations techniques -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations de lecture</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Qualité disponible :</h6>
+                            <div class="btn-group mb-3">
+                                <button class="btn btn-outline-primary btn-sm active">720p</button>
+                                <button class="btn btn-outline-primary btn-sm">1080p</button>
+                                <button class="btn btn-outline-primary btn-sm">4K</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Audio :</h6>
+                            <select class="form-select form-select-sm">
+                                <option selected>Français (Original)</option>
+                                <option>Anglais</option>
+                                <option>Version sous-titrée</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar avec informations -->
+        <div class="col-lg-4">
+            <!-- Informations du film -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>À propos du film</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        {% if film.affiche %}
+                            <img src="{{ film.affiche.url }}" class="img-fluid rounded" 
+                                 alt="{{ film.titre }}" style="max-height: 200px;">
+                        {% else %}
+                            <div class="bg-dark text-white rounded d-flex align-items-center justify-content-center" 
+                                 style="height: 150px;">
+                                <div style="font-size: 2rem;">🎬</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <h6>{{ film.titre }} ({{ film.annee }})</h6>
+                    <p class="small">{{ film.description|truncatewords:30 }}</p>
+                    
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-user me-2"></i><strong>Réalisateur:</strong> {{ film.realisateur }}</li>
+                        <li><i class="fas fa-clock me-2"></i><strong>Durée:</strong> {{ film.duree }} min</li>
+                        <li><i class="fas fa-tags me-2"></i><strong>Genre:</strong> {{ film.get_genre_display }}</li>
+                        {% if film.url_video %}
+                            <li><i class="fas fa-video me-2"></i><strong>Source:</strong> 
+                                {% video film.url_video as my_video %}
+                                    {{ my_video.backend|title }}
+                                {% endvideo %}
+                            </li>
+                        {% endif %}
+                    </ul>
+                    
+                    <a href="{% url 'detail_film' film.id %}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-info-circle me-2"></i>Voir tous les détails
+                    </a>
+                </div>
+            </div>
+
+            <!-- Contrôles de lecture -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Contrôles rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button id="skip-back" class="btn btn-outline-secondary">
+                            <i class="fas fa-backward me-2"></i>Reculer 10s
+                        </button>
+                        <button id="skip-forward" class="btn btn-outline-secondary">
+                            <i class="fas fa-forward me-2"></i>Avancer 10s
+                        </button>
+                        <button id="toggle-subtitles" class="btn btn-outline-info">
+                            <i class="fas fa-closed-captioning me-2"></i>Sous-titres
+                        </button>
+                        <button id="change-speed" class="btn btn-outline-warning">
+                            <i class="fas fa-tachometer-alt me-2"></i>Vitesse: 1x
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temps restant -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-hourglass-half me-2"></i>Votre location</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="display-4 text-warning">{{ location.temps_restant }}</div>
+                        <p class="mb-2">temps restant</p>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 75%"></div>
+                        </div>
+                        <small class="text-muted">Expire le {{ location.date_expiration|date:"d/m/Y à H:i" }}</small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="alert alert-info small">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Astuce :</strong> Vous pouvez regarder ce film autant de fois que vous voulez jusqu'à l'expiration.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="mt-4">
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'mes_locations' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour à mes locations
+            </a>
+            <a href="{% url 'catalogue_films' %}" class="btn btn-outline-primary">
+                <i class="fas fa-film me-2"></i>Voir d'autres films
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript pour la gestion vidéo -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Variables pour la simulation
+    let isPlaying = false;
+    let currentTime = 0;
+    const totalTime = {{ film.duree }} * 60; // Convertir en secondes
+    let progressInterval;
+    
+    // Éléments DOM pour la simulation
+    const startScreen = document.getElementById('start-screen');
+    const videoPlayer = document.getElementById('video-player');
+    const startButton = document.getElementById('start-video');
+    const playPauseButton = document.getElementById('play-pause');
+    const progressBar = document.getElementById('progress-bar');
+    const currentTimeElement = document.getElementById('current-time');
+    const totalTimeElement = document.getElementById('total-time');
+    const volumeSlider = document.getElementById('volume-slider');
+    const skipBackButton = document.getElementById('skip-back');
+    const skipForwardButton = document.getElementById('skip-forward');
+    
+    // Vérifier si on a une vidéo réelle
+    const hasRealVideo = {% if film.url_video %}true{% else %}false{% endif %};
+    
+    // Formater le temps (secondes -> MM:SS)
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    // Mettre à jour le temps affiché (simulation)
+    function updateTime() {
+        if (!hasRealVideo && currentTimeElement && totalTimeElement) {
+            currentTimeElement.textContent = formatTime(currentTime);
+            totalTimeElement.textContent = formatTime(totalTime);
+            
+            // Calculer le pourcentage de progression
+            const percentage = (currentTime / totalTime) * 100;
+            if (progressBar) {
+                progressBar.style.width = percentage + '%';
+            }
+        }
+    }
+    
+    // Gestion de la simulation (seulement si pas de vidéo réelle)
+    if (!hasRealVideo && startButton) {
+        // Démarrer la lecture simulée
+        startButton.addEventListener('click', function() {
+            if (startScreen) startScreen.style.display = 'none';
+            if (videoPlayer) videoPlayer.style.display = 'block';
+            
+            // Démarrer la progression simulée
+            isPlaying = true;
+            if (playPauseButton) {
+                playPauseButton.innerHTML = '<i class="fas fa-pause"></i> Pause';
+            }
+            
+            progressInterval = setInterval(function() {
+                if (isPlaying && currentTime < totalTime) {
+                    currentTime += 1;
+                    updateTime();
+                } else if (currentTime >= totalTime) {
+                    // Fin du film
+                    clearInterval(progressInterval);
+                    if (playPauseButton) {
+                        playPauseButton.innerHTML = '<i class="fas fa-play"></i> Replay';
+                    }
+                    isPlaying = false;
+                    
+                    // Afficher message de fin
+                    alert('🎬 Film terminé ! Merci d\'avoir regardé ' + '{{ film.titre }}');
+                }
+            }, 1000);
+        });
+        
+        // Play/Pause simulation
+        if (playPauseButton) {
+            playPauseButton.addEventListener('click', function() {
+                isPlaying = !isPlaying;
+                
+                if (isPlaying) {
+                    this.innerHTML = '<i class="fas fa-pause"></i> Pause';
+                } else {
+                    this.innerHTML = '<i class="fas fa-play"></i> Lecture';
+                }
+            });
+        }
+        
+        // Volume simulation
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', function() {
+                const volumeValue = this.value;
+                console.log('Volume simulé réglé à : ' + volumeValue + '%');
+            });
+        }
+        
+        // Reculer/Avancer simulation
+        if (skipBackButton) {
+            skipBackButton.addEventListener('click', function() {
+                currentTime = Math.max(0, currentTime - 10);
+                updateTime();
+            });
+        }
+        
+        if (skipForwardButton) {
+            skipForwardButton.addEventListener('click', function() {
+                currentTime = Math.min(totalTime, currentTime + 10);
+                updateTime();
+            });
+        }
+    }
+    
+    // Gestion pour vidéo réelle (YouTube/Vimeo)
+    if (hasRealVideo) {
+        // Adapter les boutons pour la vidéo réelle
+        if (skipBackButton) {
+            skipBackButton.addEventListener('click', function() {
+                showVideoTip('Utilisez les contrôles de la vidéo pour reculer (flèche gauche)');
+            });
+        }
+        
+        if (skipForwardButton) {
+            skipForwardButton.addEventListener('click', function() {
+                showVideoTip('Utilisez les contrôles de la vidéo pour avancer (flèche droite)');
+            });
+        }
+        
+        // Plein écran pour iframe
+        const fullscreenBtn = document.getElementById('fullscreen');
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', function() {
+                const iframe = document.querySelector('iframe');
+                if (iframe) {
+                    if (iframe.requestFullscreen) {
+                        iframe.requestFullscreen();
+                    } else if (iframe.webkitRequestFullscreen) {
+                        iframe.webkitRequestFullscreen();
+                    } else if (iframe.mozRequestFullScreen) {
+                        iframe.mozRequestFullScreen();
+                    } else if (iframe.msRequestFullscreen) {
+                        iframe.msRequestFullscreen();
+                    }
+                } else {
+                    showVideoTip('Double-cliquez sur la vidéo pour le mode plein écran');
+                }
+            });
+        }
+    }
+    
+    // Fonction utilitaire pour afficher des conseils
+    function showVideoTip(message) {
+        // Créer une notification temporaire
+        const tipDiv = document.createElement('div');
+        tipDiv.className = 'alert alert-info alert-dismissible fade show position-fixed';
+        tipDiv.style.cssText = 'top: 20px; right: 20px; z-index: 1050; max-width: 300px;';
+        tipDiv.innerHTML = `
+            <strong><i class="fas fa-info-circle me-2"></i>Astuce</strong>
+            <p class="mb-0">${message}</p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(tipDiv);
+        
+        // Supprimer après 3 secondes
+        setTimeout(() => {
+            if (tipDiv.parentNode) {
+                tipDiv.parentNode.removeChild(tipDiv);
+            }
+        }, 3000);
+    }
+    
+    // Sous-titres (simulé pour les deux modes)
+    const toggleSubtitlesBtn = document.getElementById('toggle-subtitles');
+    if (toggleSubtitlesBtn) {
+        toggleSubtitlesBtn.addEventListener('click', function() {
+            const isActive = this.classList.contains('btn-info');
+            if (isActive) {
+                this.classList.remove('btn-info');
+                this.classList.add('btn-outline-info');
+                this.innerHTML = '<i class="fas fa-closed-captioning me-2"></i>Sous-titres';
+                showVideoTip('Sous-titres désactivés');
+            } else {
+                this.classList.remove('btn-outline-info');
+                this.classList.add('btn-info');
+                this.innerHTML = '<i class="fas fa-closed-captioning me-2"></i>Sous-titres ON';
+                showVideoTip('Sous-titres activés');
+            }
+        });
+    }
+    
+    // Vitesse de lecture (simulé)
+    const changeSpeedBtn = document.getElementById('change-speed');
+    if (changeSpeedBtn) {
+        changeSpeedBtn.addEventListener('click', function() {
+            const speeds = ['0.5x', '0.75x', '1x', '1.25x', '1.5x', '2x'];
+            let currentSpeed = this.textContent.split(': ')[1] || '1x';
+            let currentIndex = speeds.indexOf(currentSpeed);
+            
+            currentIndex = (currentIndex + 1) % speeds.length;
+            this.innerHTML = '<i class="fas fa-tachometer-alt me-2"></i>Vitesse: ' + speeds[currentIndex];
+            
+            if (hasRealVideo) {
+                showVideoTip('La vitesse de lecture peut être ajustée dans les paramètres de la vidéo');
+            }
+        });
+    }
+    
+    // Initialiser l'affichage du temps (simulation)
+    if (!hasRealVideo) {
+        updateTime();
+    }
+});
+</script>
+
+<style>
+/* Style pour la vidéo intégrée */
+.video-container iframe {
+    border: none;
+    width: 100%;
+    height: 100%;
+}
+
+.ratio-16x9 {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+}
+
+.ratio-16x9 > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.video-info {
+    border-top: 1px solid #333;
+}
+
+/* Style pour la simulation */
+.video-controls-top, .video-controls-bottom {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.video-screen {
+    transition: all 0.3s ease;
+}
+
+.progress-bar {
+    transition: width 1s linear;
+}
+
+.btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.form-range::-webkit-slider-thumb {
+    background: #0d6efd;
+}
+
+.form-range::-moz-range-thumb {
+    background: #0d6efd;
+}
+
+/* Style responsive */
+@media (max-width: 768px) {
+    .video-container {
+        min-height: 300px;
+    }
+    
+    .video-controls-top, .video-controls-bottom {
+        padding: 10px !important;
+    }
+}
+</style>
+{% endblock %}

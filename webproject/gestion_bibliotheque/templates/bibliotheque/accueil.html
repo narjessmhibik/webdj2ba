@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+
+{% block title %}Accueil - CinéLocation{% endblock %}
+
+{% block content %}
+<!-- Hero Section moderne avec animation -->
+<div class="hero-section position-relative rounded-3 overflow-hidden mb-5" 
+     style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%), 
+            url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200') center/cover; 
+            min-height: 500px;">
+    <div class="container h-100 py-5">
+        <div class="row align-items-center h-100">
+            <div class="col-lg-7 text-white">
+                <div class="badge bg-white bg-opacity-25 text-white mb-3 px-3 py-2">
+                    <i class="fas fa-star me-1"></i>Plateforme N°1 de location de films
+                </div>
+                <h1 class="display-3 fw-bold mb-4">
+                    Bienvenue sur<br>
+                    <span style="background: linear-gradient(135deg, #fff 0%, #f093fb 100%); 
+                                 -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        CinéLocation
+                    </span>
+                </h1>
+                <p class="lead mb-4 fs-4">
+                    Découvrez des milliers de films en streaming HD.<br>
+                    Location simple, rapide et économique.
+                </p>
+                {% if not user.is_authenticated %}
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="{% url 'register' %}" class="btn btn-light btn-lg px-5 py-3 shadow">
+                            <i class="fas fa-rocket me-2"></i>Commencer maintenant
+                        </a>
+                        <a href="{% url 'catalogue_films' %}" class="btn btn-outline-light btn-lg px-5 py-3">
+                            <i class="fas fa-compass me-2"></i>Explorer le catalogue
+                        </a>
+                    </div>
+                {% else %}
+                    <a href="{% url 'catalogue_films' %}" class="btn btn-light btn-lg px-5 py-3 shadow">
+                        <i class="fas fa-film me-2"></i>Découvrir nos films
+                    </a>
+                {% endif %}
+                
+                <!-- Statistiques rapides -->
+                <div class="row mt-5 text-center">
+                    <div class="col-4">
+                        <div class="display-6 fw-bold">1000+</div>
+                        <small class="text-white-50">Films disponibles</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="display-6 fw-bold">2.99€</div>
+                        <small class="text-white-50">À partir de</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="display-6 fw-bold">48h</div>
+                        <small class="text-white-50">D'accès</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Colonne principale -->
+    <div class="col-lg-8">
+        <!-- Section Nouveautés -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">
+                <i class="fas fa-fire text-danger me-2"></i>
+                Nouveautés
+            </h2>
+            <a href="{% url 'catalogue_films' %}" class="btn btn-outline-primary">
+                Voir tout <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for film in films_recents %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card film-card h-100 shadow-sm position-relative">
+                    <!-- Badge Nouveau -->
+                    <div class="position-absolute top-0 start-0 m-2" style="z-index: 10;">
+                        <span class="badge bg-danger">
+                            <i class="fas fa-star me-1"></i>Nouveau
+                        </span>
+                    </div>
+
+                    <!-- Affiche du film -->
+                    {% if film.affiche %}
+                    <div style="height: 300px; overflow: hidden;">
+                        <img src="{{ film.affiche.url }}" class="card-img-top w-100 h-100" 
+                             alt="{{ film.titre }}" style="object-fit: cover;">
+                    </div>
+                    {% else %}
+                    <div class="card-img-top d-flex align-items-center justify-content-center text-white" 
+                         style="height: 300px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                        <div class="text-center">
+                            <i class="fas fa-film display-3 mb-2"></i>
+                            <h6>{{ film.titre }}</h6>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title fw-bold mb-2">{{ film.titre }}</h5>
+                        <p class="text-muted small mb-2">
+                            <i class="fas fa-user-tie me-1"></i>{{ film.realisateur }}
+                            <span class="mx-1">•</span>
+                            <i class="fas fa-calendar me-1"></i>{{ film.annee }}
+                        </p>
+                        <div class="mb-3">
+                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                {{ film.get_genre_display }}
+                            </span>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="h4 text-success mb-0 fw-bold">{{ film.prix_location }}€</span>
+                                {% if film.est_disponible %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Disponible
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">Indisponible</span>
+                                {% endif %}
+                            </div>
+                            <a href="{% url 'detail_film' film.id %}" class="btn btn-primary w-100">
+                                <i class="fas fa-info-circle me-2"></i>Voir détails
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Aucun film disponible pour le moment.
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Films Populaires -->
+        {% if films_populaires %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header text-white py-3" 
+                 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-trophy me-2"></i>Films Populaires
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for film in films_populaires %}
+                <div class="d-flex align-items-center mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div class="flex-shrink-0 me-3 position-relative">
+                        {% if film.affiche %}
+                        <img src="{{ film.affiche.url }}" class="rounded" alt="{{ film.titre }}" 
+                             style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-primary bg-opacity-10 text-primary rounded d-flex align-items-center justify-content-center" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        {% endif %}
+                        <span class="position-absolute top-0 start-0 badge bg-warning text-dark" 
+                              style="font-size: 0.7rem;">
+                            #{{ forloop.counter }}
+                        </span>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1 fw-bold">{{ film.titre }}</h6>
+                        <small class="text-muted">{{ film.get_genre_display }}</small>
+                        <div class="text-success fw-bold small">{{ film.prix_location }}€</div>
+                    </div>
+                    <a href="{% url 'detail_film' film.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Statistiques -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-primary bg-opacity-10 text-primary py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-chart-bar me-2"></i>Notre Collection
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center g-3">
+                    <div class="col-6">
+                        <div class="p-3 rounded" style="background: linear-gradient(135deg, #667eea15, #764ba215);">
+                            <div class="display-6 fw-bold text-primary">{{ films_recents.count }}</div>
+                            <small class="text-muted">Films disponibles</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded" style="background: linear-gradient(135deg, #f093fb15, #f5576c15);">
+                            <div class="display-6 fw-bold text-danger">{{ genres_count }}</div>
+                            <small class="text-muted">Genres différents</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        {% if not user.is_authenticated %}
+        <div class="card border-0 shadow-sm text-white" 
+             style="background: linear-gradient(135deg, #667eea, #764ba2);">
+            <div class="card-body text-center p-4">
+                <i class="fas fa-user-plus display-4 mb-3"></i>
+                <h5 class="fw-bold mb-2">Créez votre compte</h5>
+                <p class="mb-3">Accédez à des milliers de films dès maintenant</p>
+                <a href="{% url 'register' %}" class="btn btn-light w-100 py-2">
+                    <i class="fas fa-rocket me-2"></i>S'inscrire gratuitement
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Features Section modernisée -->
+<div class="mt-5 pt-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold mb-3">Pourquoi choisir CinéLocation ?</h2>
+        <p class="text-muted lead">Votre partenaire de confiance pour le streaming de films</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 text-center p-4">
+                <div class="mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle" 
+                         style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea15, #764ba215);">
+                        <i class="fas fa-th-large text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+                <h5 class="fw-bold mb-3">Large Sélection</h5>
+                <p class="text-muted">
+                    Des centaines de films de tous genres : action, comédie, drame, thriller et bien plus encore.
+                </p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 text-center p-4">
+                <div class="mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle" 
+                         style="width: 80px; height: 80px; background: linear-gradient(135deg, #43e97b15, #38f9d715);">
+                        <i class="fas fa-euro-sign text-success" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+                <h5 class="fw-bold mb-3">Prix Abordables</h5>
+                <p class="text-muted">
+                    Location à partir de 2.99€ seulement. Profitez de films en qualité HD sans vous ruiner.
+                </p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 text-center p-4">
+                <div class="mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle" 
+                         style="width: 80px; height: 80px; background: linear-gradient(135deg, #fa709a15, #fee14015);">
+                        <i class="fas fa-bolt text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+                <h5 class="fw-bold mb-3">Accès Immédiat</h5>
+                <p class="text-muted">
+                    Regardez vos films instantanément en streaming. Disponible sur tous vos appareils.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section Comment ça marche -->
+<div class="mt-5 pt-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold mb-3">Comment ça marche ?</h2>
+        <p class="text-muted lead">Trois étapes simples pour profiter de vos films préférés</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="position-relative d-inline-block mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold"
+                         style="width: 80px; height: 80px; font-size: 2rem;">
+                        1
+                    </div>
+                </div>
+                <h5 class="fw-bold mb-3">Parcourez</h5>
+                <p class="text-muted">Explorez notre catalogue et trouvez le film parfait pour votre soirée</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="position-relative d-inline-block mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success text-white fw-bold"
+                         style="width: 80px; height: 80px; font-size: 2rem;">
+                        2
+                    </div>
+                </div>
+                <h5 class="fw-bold mb-3">Louez</h5>
+                <p class="text-muted">Choisissez votre film et complétez le paiement en toute sécurité</p>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="position-relative d-inline-block mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger text-white fw-bold"
+                         style="width: 80px; height: 80px; font-size: 2rem;">
+                        3
+                    </div>
+                </div>
+                <h5 class="fw-bold mb-3">Regardez</h5>
+                <p class="text-muted">Profitez de votre film en streaming pendant 48 heures, autant que vous voulez</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

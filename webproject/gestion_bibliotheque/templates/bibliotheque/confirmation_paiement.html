@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %}Paiement réussi - CinéLocation{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Animation de succès -->
+            <div class="text-center mb-5">
+                <div class="mb-4 position-relative d-inline-block">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center" 
+                         style="width: 120px; height: 120px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <i class="fas fa-check text-white" style="font-size: 4rem;"></i>
+                    </div>
+                    <div class="position-absolute top-0 start-0 w-100 h-100">
+                        <svg viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="55" fill="none" stroke="#43e97b" stroke-width="4" opacity="0.3">
+                                <animate attributeName="r" from="55" to="65" dur="1s" repeatCount="indefinite"/>
+                                <animate attributeName="opacity" from="0.3" to="0" dur="1s" repeatCount="indefinite"/>
+                            </circle>
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="fw-bold mb-3" style="color: #43e97b;">
+                    <i class="fas fa-party-horn me-2"></i>Paiement réussi !
+                </h2>
+                <p class="lead text-muted">Votre transaction a été traitée avec succès</p>
+            </div>
+
+            <!-- Carte principale -->
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header text-white py-4" 
+                     style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="mb-1 fw-bold">Félicitations !</h4>
+                            <p class="mb-0">Votre film est maintenant disponible</p>
+                        </div>
+                        <i class="fas fa-film" style="font-size: 3rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+
+                <div class="card-body p-5">
+                    <!-- Récapitulatif du film -->
+                    <div class="row mb-5">
+                        <div class="col-md-4 text-center">
+                            {% if film.affiche %}
+                                <img src="{{ film.affiche.url }}" 
+                                     class="img-fluid rounded shadow" 
+                                     alt="{{ film.titre }}" 
+                                     style="max-height: 300px;">
+                            {% else %}
+                                <div class="rounded shadow d-flex align-items-center justify-content-center text-white mx-auto" 
+                                     style="height: 300px; width: 200px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                    <i class="fas fa-film display-1"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h3 class="fw-bold mb-3">{{ film.titre }}</h3>
+                            <p class="text-muted mb-3">{{ film.realisateur }} • {{ film.annee }}</p>
+                            
+                            <!-- Informations importantes -->
+                            <div class="alert alert-success mb-4">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-clock fs-3 me-3 mt-1"></i>
+                                    <div>
+                                        <h6 class="fw-bold mb-1">Accès valable jusqu'au :</h6>
+                                        <p class="mb-0 fs-5 fw-bold">{{ location.date_expiration|date:"d/m/Y à H:i" }}</p>
+                                        <small class="text-muted">Soit 48 heures à partir de maintenant</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Détails supplémentaires -->
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="p-3 rounded bg-light">
+                                        <small class="text-muted d-block mb-1">Genre</small>
+                                        <strong>{{ film.get_genre_display }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 rounded bg-light">
+                                        <small class="text-muted d-block mb-1">Durée</small>
+                                        <strong>{{ film.duree }} minutes</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Détails du paiement -->
+                    <div class="card border-0 bg-light mb-4">
+                        <div class="card-header bg-transparent border-0 py-3">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-receipt me-2"></i>Détails de la transaction
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-borderless mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-muted">
+                                                <i class="fas fa-hashtag me-2"></i>Référence
+                                            </td>
+                                            <td class="text-end">
+                                                <code class="fs-6">{{ paiement.reference }}</code>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">
+                                                <i class="fas fa-euro-sign me-2"></i>Montant
+                                            </td>
+                                            <td class="text-end">
+                                                <strong class="text-success fs-5">{{ paiement.montant }}€</strong>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">
+                                                <i class="fas fa-credit-card me-2"></i>Méthode
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="badge bg-primary">{{ paiement.get_methode_display }}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">
+                                                <i class="fas fa-calendar me-2"></i>Date et heure
+                                            </td>
+                                            <td class="text-end">{{ paiement.date_paiement|date:"d/m/Y à H:i" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">
+                                                <i class="fas fa-check-circle me-2"></i>Statut
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="badge bg-success px-3 py-2">
+                                                    <i class="fas fa-check me-1"></i>{{ paiement.get_statut_display }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions principales -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <a href="{% url 'regarder_film' film.id %}" class="btn btn-success btn-lg w-100 py-3">
+                                <i class="fas fa-play-circle me-2"></i>
+                                Commencer à regarder maintenant
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'mes_locations' %}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-video me-2"></i>Mes locations
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'historique_paiements' %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-receipt me-2"></i>Mes paiements
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'catalogue_films' %}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-film me-2"></i>Catalogue
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Informations importantes -->
+                    <div class="card border-0" style="background: linear-gradient(135deg, #667eea15, #764ba215);">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-3">
+                                <i class="fas fa-info-circle me-2 text-primary"></i>
+                                À savoir :
+                            </h6>
+                            <ul class="mb-0">
+                                <li class="mb-2">
+                                    <strong>Confirmation par email :</strong> Un récapitulatif vous a été envoyé
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Visionnages illimités :</strong> Regardez le film autant que vous voulez pendant 48h
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Multi-appareils :</strong> Compatible ordinateur, smartphone, tablette et Smart TV
+                                </li>
+                                <li class="mb-0">
+                                    <strong>Retour automatique :</strong> Le film sera retiré de votre compte le {{ location.date_expiration|date:"d/m/Y à H:i" }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary bg-opacity-10 text-primary py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Vous pourriez aussi aimer
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Découvrez d'autres films du genre <strong>{{ film.get_genre_display }}</strong>
+                    </p>
+                    <a href="{% url 'catalogue_films' %}?genre={{ film.genre }}" class="btn btn-outline-primary">
+                        <i class="fas fa-search me-2"></i>Explorer {{ film.get_genre_display }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes pulse-ring {
+    0% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+    100% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+}
+</style>
+{% endblock %}

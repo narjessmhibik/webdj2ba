@@ -1,0 +1,403 @@
+{% extends 'base.html' %}
+
+{% block title %}Paiement - {{ film.titre }} - CinéLocation{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb bg-white p-3 rounded shadow-sm">
+        <li class="breadcrumb-item"><a href="{% url 'accueil' %}" class="text-decoration-none"><i class="fas fa-home me-1"></i>Accueil</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'catalogue_films' %}" class="text-decoration-none">Catalogue</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'detail_film' film.id %}" class="text-decoration-none">{{ film.titre }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'initier_paiement' film.id %}" class="text-decoration-none">Paiement</a></li>
+        <li class="breadcrumb-item active">Simulation</li>
+    </ol>
+</nav>
+
+<!-- Étapes de paiement -->
+<div class="mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="text-center flex-fill">
+                    <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center mb-2"
+                         style="width: 50px; height: 50px;">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="small fw-semibold">Sélection</div>
+                </div>
+                <div class="flex-fill border-top border-2 border-success" style="height: 2px; margin: 0 -15px; transform: translateY(-25px);"></div>
+                <div class="text-center flex-fill">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-2"
+                         style="width: 50px; height: 50px;">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="small fw-semibold text-primary">Paiement</div>
+                </div>
+                <div class="flex-fill border-top border-2 border-secondary" style="height: 2px; margin: 0 -15px; transform: translateY(-25px);"></div>
+                <div class="text-center flex-fill">
+                    <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center mb-2"
+                         style="width: 50px; height: 50px;">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <div class="small text-muted">Confirmation</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="row g-4">
+            <!-- Formulaire de paiement -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header text-white py-3" 
+                         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <h4 class="mb-0 fw-bold">
+                            <i class="fas fa-credit-card me-2"></i>Informations de paiement
+                        </h4>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <!-- Résumé de la commande -->
+                        <div class="alert alert-primary mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-shopping-cart fs-3 me-3"></i>
+                                <div class="flex-grow-1">
+                                    <h5 class="mb-1 fw-bold">{{ film.titre }}</h5>
+                                    <p class="mb-0 small">Location pour 48 heures • Visionnage illimité</p>
+                                </div>
+                                <div class="text-end">
+                                    <h4 class="mb-0 text-success fw-bold">{{ prix }}€</h4>
+                                    <small class="text-muted">TTC</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulaire -->
+                        <form method="post" id="payment-form">
+                            {% csrf_token %}
+                            
+                            <!-- Méthode de paiement -->
+                            <div class="mb-4">
+                                <h5 class="fw-bold mb-3">
+                                    <i class="fas fa-wallet me-2 text-primary"></i>Méthode de paiement
+                                </h5>
+                                <div class="row g-3">
+                                    <!-- Carte bancaire -->
+                                    <div class="col-md-6">
+                                        <input type="radio" 
+                                               class="btn-check" 
+                                               name="methode" 
+                                               id="methode_carte" 
+                                               value="carte"
+                                               {% if form.methode.value == 'carte' or not form.methode.value %}checked{% endif %}
+                                               autocomplete="off">
+                                        <label class="btn btn-outline-primary w-100 p-4 text-center h-100" for="methode_carte">
+                                            <i class="fas fa-credit-card display-4 mb-3"></i>
+                                            <h6 class="fw-bold mb-0">Carte bancaire</h6>
+                                            <small class="text-muted d-block mt-2">Visa, Mastercard</small>
+                                        </label>
+                                    </div>
+                                    
+                                    <!-- PayPal -->
+                                    <div class="col-md-6">
+                                        <input type="radio" 
+                                               class="btn-check" 
+                                               name="methode" 
+                                               id="methode_paypal" 
+                                               value="paypal"
+                                               {% if form.methode.value == 'paypal' %}checked{% endif %}
+                                               autocomplete="off">
+                                        <label class="btn btn-outline-primary w-100 p-4 text-center h-100" for="methode_paypal">
+                                            <i class="fab fa-paypal display-4 mb-3"></i>
+                                            <h6 class="fw-bold mb-0">PayPal</h6>
+                                            <small class="text-muted d-block mt-2">Paiement rapide</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Champs pour carte bancaire -->
+                            <div id="carte-fields" style="display: none;">
+                                <div class="card border-primary mb-4">
+                                    <div class="card-header bg-primary bg-opacity-10 text-primary py-3">
+                                        <h6 class="mb-0 fw-bold">
+                                            <i class="fas fa-lock me-2"></i>Informations de la carte
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-4">
+                                        <!-- Numéro de carte -->
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="fas fa-credit-card me-1"></i>Numéro de carte *
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <span class="input-group-text bg-white">
+                                                    <i class="fas fa-credit-card text-primary"></i>
+                                                </span>
+                                                <input type="text" 
+                                                       name="numero_carte" 
+                                                       class="form-control" 
+                                                       placeholder="4242 4242 4242 4242"
+                                                       value="{{ form.numero_carte.value|default_if_none:'' }}"
+                                                       maxlength="19">
+                                            </div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                Pour la simulation : <code>4242 4242 4242 4242</code>
+                                            </small>
+                                            {% if form.numero_carte.errors %}
+                                                <div class="text-danger small mt-1">{{ form.numero_carte.errors }}</div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="row g-3">
+                                            <!-- Date d'expiration -->
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="fas fa-calendar me-1"></i>Date d'expiration *
+                                                </label>
+                                                <input type="text" 
+                                                       name="date_expiration" 
+                                                       class="form-control form-control-lg" 
+                                                       placeholder="MM/AAAA"
+                                                       value="{{ form.date_expiration.value|default_if_none:'' }}">
+                                            </div>
+                                            
+                                            <!-- CVV -->
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="fas fa-shield-alt me-1"></i>CVV *
+                                                </label>
+                                                <div class="input-group input-group-lg">
+                                                    <input type="password" 
+                                                           name="cvv" 
+                                                           class="form-control" 
+                                                           placeholder="123"
+                                                           maxlength="4">
+                                                    <span class="input-group-text bg-white">
+                                                        <i class="fas fa-question-circle text-muted" 
+                                                           data-bs-toggle="tooltip" 
+                                                           title="Les 3 chiffres au dos de votre carte"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Badges de sécurité -->
+                                        <div class="mt-3 p-3 rounded bg-light">
+                                            <div class="d-flex align-items-center gap-3 justify-content-center flex-wrap">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-lock text-success me-1"></i>
+                                                    Paiement sécurisé
+                                                </small>
+                                                <i class="fab fa-cc-visa fs-3 text-primary"></i>
+                                                <i class="fab fa-cc-mastercard fs-3 text-warning"></i>
+                                                <i class="fab fa-cc-amex fs-3 text-info"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Conditions -->
+                            <div class="mb-4">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body p-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   name="conditions" 
+                                                   id="conditions" 
+                                                   {% if form.conditions.value %}checked{% endif %}
+                                                   required>
+                                            <label class="form-check-label" for="conditions">
+                                                <strong>J'accepte les conditions de paiement</strong>
+                                                <p class="mb-0 small text-muted mt-1">
+                                                    En cochant cette case, vous acceptez que ce paiement est une simulation à but pédagogique. 
+                                                    Aucun débit réel ne sera effectué.
+                                                </p>
+                                            </label>
+                                        </div>
+                                        {% if form.conditions.errors %}
+                                            <div class="text-danger small mt-2">{{ form.conditions.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Boutons -->
+                            <div class="d-grid gap-3">
+                                <button type="submit" class="btn btn-success btn-lg py-3">
+                                    <i class="fas fa-lock me-2"></i>
+                                    Valider le paiement de {{ prix }}€
+                                </button>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <a href="{% url 'initier_paiement' film.id %}" class="btn btn-outline-secondary w-100">
+                                            <i class="fas fa-arrow-left me-2"></i>Retour
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="{% url 'detail_film' film.id %}" class="btn btn-outline-primary w-100">
+                                            <i class="fas fa-times me-2"></i>Annuler
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Récapitulatif et sécurité -->
+            <div class="col-lg-4">
+                <!-- Récapitulatif de commande -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-primary bg-opacity-10 text-primary py-3">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="fas fa-shopping-bag me-2"></i>Récapitulatif
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Miniature du film -->
+                        <div class="text-center mb-3">
+                            {% if film.affiche %}
+                                <img src="{{ film.affiche.url }}" 
+                                     class="img-fluid rounded shadow-sm" 
+                                     alt="{{ film.titre }}"
+                                     style="max-height: 150px;">
+                            {% else %}
+                                <div class="rounded shadow-sm d-flex align-items-center justify-content-center text-white mx-auto"
+                                     style="height: 150px; width: 100px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                    <i class="fas fa-film display-4"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <h6 class="fw-bold text-center mb-3">{{ film.titre }}</h6>
+                        
+                        <div class="border-top border-bottom py-3 mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Prix de location</span>
+                                <span class="fw-semibold">{{ prix }}€</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small">Durée d'accès</span>
+                                <span class="fw-semibold">48h</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small">Visionnages</span>
+                                <span class="fw-semibold">∞</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded"
+                             style="background: linear-gradient(135deg, #43e97b15, #38f9d715);">
+                            <span class="fw-bold">Total à payer</span>
+                            <span class="h4 mb-0 text-success fw-bold">{{ prix }}€</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Note pédagogique -->
+                <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #ffeaa715, #ffd70015);">
+                    <div class="card-body">
+                        <div class="text-center mb-2">
+                            <i class="fas fa-graduation-cap text-warning display-4"></i>
+                        </div>
+                        <h6 class="fw-bold text-center mb-2">Simulation Pédagogique</h6>
+                        <p class="text-muted small mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Ceci est une simulation à but éducatif. 
+                            Environ <strong>20% des tentatives</strong> échoueront volontairement 
+                            pour démontrer la gestion d'erreurs.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Sécurité -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-shield-alt text-success me-2"></i>Paiement Sécurisé
+                        </h6>
+                        <ul class="list-unstyled small mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Connexion SSL 256-bit
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Conformité PCI-DSS
+                            </li>
+                            <li class="mb-0">
+                                <i class="fas fa-check text-success me-2"></i>
+                                Aucune donnée stockée
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle des champs de carte
+function toggleCardFields(methode) {
+    const carteFields = document.getElementById('carte-fields');
+    if (methode === 'carte') {
+        carteFields.style.display = 'block';
+    } else {
+        carteFields.style.display = 'none';
+    }
+}
+
+// Initialiser avec la méthode sélectionnée
+document.addEventListener('DOMContentLoaded', function() {
+    const selected = document.querySelector('input[name="methode"]:checked');
+    if (selected) {
+        toggleCardFields(selected.value);
+    }
+
+    // Écouter les changements de méthode
+    document.querySelectorAll('input[name="methode"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            toggleCardFields(this.value);
+        });
+    });
+
+    // Formatage automatique du numéro de carte
+    const cardInput = document.querySelector('input[name="numero_carte"]');
+    if (cardInput) {
+        cardInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+    }
+
+    // Formatage de la date d'expiration
+    const dateInput = document.querySelector('input[name="date_expiration"]');
+    if (dateInput) {
+        dateInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.slice(0, 2) + '/' + value.slice(2, 6);
+            }
+            e.target.value = value;
+        });
+    }
+
+    // Activer les tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => {
+        new bootstrap.Tooltip(tooltip);
+    });
+});
+</script>
+{% endblock %}

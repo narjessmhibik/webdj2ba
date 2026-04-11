@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Inscription - CinéLocation{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-75">
+    <div class="col-lg-10">
+        <div class="row g-0 shadow-lg rounded-3 overflow-hidden">
+            <!-- Colonne visuelle gauche -->
+            <div class="col-lg-5 d-none d-lg-block position-relative">
+                <div class="h-100 p-5 text-white d-flex flex-column justify-content-center" 
+                     style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="mb-4">
+                        <i class="fas fa-ticket-alt display-1 mb-4"></i>
+                        <h2 class="fw-bold mb-3">Rejoignez CinéLocation</h2>
+                        <p class="lead mb-4">Créez votre compte et accédez à des milliers de films instantanément</p>
+                    </div>
+                    
+                    <!-- Avantages -->
+                    <div class="mt-auto">
+                        <h5 class="fw-bold mb-3">Vos avantages :</h5>
+                        <div class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle fs-4 me-3 mt-1"></i>
+                            <div>
+                                <strong>Catalogue complet</strong>
+                                <p class="mb-0 small">Accès à 1000+ films de tous genres</p>
+                            </div>
+                        </div>
+                        <div class="mb-3 d-flex align-items-start">
+                            <i class="fas fa-check-circle fs-4 me-3 mt-1"></i>
+                            <div>
+                                <strong>Prix attractifs</strong>
+                                <p class="mb-0 small">Location à partir de 2.99€</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle fs-4 me-3 mt-1"></i>
+                            <div>
+                                <strong>Streaming HD</strong>
+                                <p class="mb-0 small">Qualité haute définition garantie</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne formulaire droite -->
+            <div class="col-lg-7 bg-white">
+                <div class="p-5">
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle mb-3" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-user-plus text-primary fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold mb-2">Créer un compte</h3>
+                        <p class="text-muted">Commencez votre aventure cinématographique</p>
+                    </div>
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Erreur lors de l'inscription
+                        </h6>
+                        <ul class="mb-0 mt-2">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li class="small">{{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row g-3">
+                            <!-- Nom d'utilisateur -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-user me-1 text-muted"></i>Nom d'utilisateur *
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       name="username" 
+                                       value="{{ form.username.value|default:'' }}" 
+                                       required
+                                       placeholder="Choisissez un nom unique">
+                                <small class="text-muted">Lettres, chiffres et @/./+/-/_ uniquement</small>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-envelope me-1 text-muted"></i>Adresse email *
+                                </label>
+                                <input type="email" 
+                                       class="form-control form-control-lg" 
+                                       name="email"
+                                       value="{{ form.email.value|default:'' }}" 
+                                       required
+                                       placeholder="votre@email.com">
+                            </div>
+
+                            <!-- Mot de passe -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-lock me-1 text-muted"></i>Mot de passe *
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control form-control-lg" 
+                                           id="password1"
+                                           name="password1" 
+                                           required
+                                           placeholder="Minimum 8 caractères">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword1">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-info-circle me-1"></i>Critères requis :
+                                    </small>
+                                    <small class="text-muted d-block">• Minimum 8 caractères</small>
+                                    <small class="text-muted d-block">• Pas trop courant</small>
+                                </div>
+                            </div>
+
+                            <!-- Confirmation mot de passe -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-check-circle me-1 text-muted"></i>Confirmation *
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           class="form-control form-control-lg" 
+                                           id="password2"
+                                           name="password2" 
+                                           required
+                                           placeholder="Répétez le mot de passe">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword2">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Conditions -->
+                        <div class="mt-4 mb-4">
+                            <div class="card border-0 bg-light p-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="conditions" required>
+                                    <label class="form-check-label" for="conditions">
+                                        J'accepte les 
+                                        <a href="#" onclick="alert('Conditions à venir!')" class="text-decoration-none">
+                                            conditions d'utilisation
+                                        </a> 
+                                        et la 
+                                        <a href="#" onclick="alert('Politique à venir!')" class="text-decoration-none">
+                                            politique de confidentialité
+                                        </a>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3 mb-3 fw-semibold">
+                            <i class="fas fa-rocket me-2"></i>Créer mon compte
+                        </button>
+                    </form>
+
+                    <div class="text-center pt-3 border-top">
+                        <p class="text-muted mb-0">
+                            Déjà membre ? 
+                            <a href="{% url 'login' %}" class="text-decoration-none fw-semibold">
+                                Se connecter
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="row mt-5 g-4 text-center">
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class="fas fa-film text-primary display-4 mb-2"></i>
+                    <h4 class="fw-bold">1000+</h4>
+                    <p class="text-muted mb-0">Films disponibles</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class="fas fa-euro-sign text-success display-4 mb-2"></i>
+                    <h4 class="fw-bold">2.99€</h4>
+                    <p class="text-muted mb-0">À partir de</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class="fas fa-bolt text-warning display-4 mb-2"></i>
+                    <h4 class="fw-bold">Instantané</h4>
+                    <p class="text-muted mb-0">Accès immédiat</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3">
+                    <i class="fas fa-hd-video text-danger display-4 mb-2"></i>
+                    <h4 class="fw-bold">HD & 4K</h4>
+                    <p class="text-muted mb-0">Qualité premium</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle password visibility
+['togglePassword1', 'togglePassword2'].forEach((id, index) => {
+    const btn = document.getElementById(id);
+    const input = document.getElementById(`password${index + 1}`);
+    
+    if (btn && input) {
+        btn.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+});
+
+// Form validation
+(function() {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+})();
+</script>
+
+<style>
+.min-vh-75 {
+    min-height: 75vh;
+}
+</style>
+{% endblock %}
