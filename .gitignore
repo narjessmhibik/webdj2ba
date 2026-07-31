@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Environnements virtuels
+venv/
+venv_py311/
+env/
+.venv/
+
+# Django
+*.log
+local_settings.py
+media/
+
+# Fichiers statiques collectés
+/staticfiles/
+/static_root/
+
+# Environnement & secrets
+.env
+.env.*
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
